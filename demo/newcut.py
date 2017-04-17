@@ -186,7 +186,6 @@ def output(cap, pred, keep_prob, px, labelname):
             			lefttime_ans[0] = left_ans[0]
             			lefttime_ans_tmp = Counter(lefttime_ans)
             			left_ans = lefttime_ans_tmp.most_common(1)[0]
-			cv2.imwrite('show.png', rightflat_arr[0])
         		cv2.imshow('frame', show_frame)
         		if cv2.waitKey(1) & 0xFF == ord('q'):
             			break
