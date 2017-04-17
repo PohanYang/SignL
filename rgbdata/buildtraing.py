@@ -66,9 +66,11 @@ def init():
 	return train_name, dict_path
 
 def get_pic(filename):
-	img = Image.open(filename)
-	img = img.resize((60,50,3), Image.BILINEAR)
+	img = cv2.imread(filename)
+	img = Image.fromarray(img, 'RGB')
+	img = img.resize((60,50), Image.BILINEAR)
 	flat_arr = np.array(img)
+	cv2.imwrite("newarr.png", flat_arr)
 	return flat_arr
 
 def load_data(signL, train_name, dict_path):

@@ -160,18 +160,19 @@ def output(cap, pred, keep_prob, px, labelname):
 			t_frame = np.copy(frame)
 			detect_postion = detect_postion.astype(int)
 			detect_postion, righthand, lefthand, show_frame = classify3(detect_postion, righthand, lefthand, show_frame)
-			print detect_postion
+			#print detect_postion
 			if righthand[0]!=0:
 				rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
 				rightflat_arr = get_pic(rightframe)
             			rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
+				print rightflat_arr[0].shape
             			right_ans = sess.run(tf.argmax(pred,1), feed_dict={px: rightflat_arr, keep_prob: 1.})
             			for c in range(9):
                 			righttime_ans[c+1]=righttime_ans[c]
             			righttime_ans[0] = right_ans[0]
             			righttime_ans_tmp = Counter(righttime_ans)
             			right_ans = righttime_ans_tmp.most_common(1)[0]
-            			print right_ans[0]
+            			#print right_ans[0]
             			show_frame = printing_word(show_frame, "Your right Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 0, 0)
         		if False:
 				leftframe = leftframe[lefthand[1]:lefthand[1]+lefthand[3], lefthand[0]:lefthand[0]+lefthand[2]]
@@ -185,7 +186,8 @@ def output(cap, pred, keep_prob, px, labelname):
             			lefttime_ans[0] = left_ans[0]
             			lefttime_ans_tmp = Counter(lefttime_ans)
             			left_ans = lefttime_ans_tmp.most_common(1)[0]
-        		cv2.imshow('frame', rightframe)
+			cv2.imwrite('show.png', rightflat_arr[0])
+        		cv2.imshow('frame', show_frame)
         		if cv2.waitKey(1) & 0xFF == ord('q'):
             			break
 		if odd!=10:
