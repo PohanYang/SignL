@@ -111,7 +111,7 @@ def init():
 def loadtensorflow():
 	global sess, all_vars
 	sess = tf.Session()
-	new_saver = tf.train.import_meta_graph('../Model/NIN-New-Model-Demo.meta')
+	new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0420.meta')
 	new_saver.restore(sess, tf.train.latest_checkpoint('../Model/./'))
 	all_vars = tf.trainable_variables()
 	summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', sess.graph)
@@ -152,7 +152,7 @@ def output(cap, pred, keep_prob, px, labelname):
 		leftframe = np.copy(frame)
 		show_frame = np.copy(frame)
 		if odd == 10:
-			#odd=0
+			odd=0
 			for detect in range(3):
 				x,y,w,h = DetectObject(frame)
 				detect_postion[detect]=[x,y,w,h]
@@ -165,7 +165,6 @@ def output(cap, pred, keep_prob, px, labelname):
 				rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
 				rightflat_arr = get_pic(rightframe)
             			rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
-				print rightflat_arr[0].shape
             			right_ans = sess.run(tf.argmax(pred,1), feed_dict={px: rightflat_arr, keep_prob: 1.})
             			for c in range(9):
                 			righttime_ans[c+1]=righttime_ans[c]
@@ -173,7 +172,7 @@ def output(cap, pred, keep_prob, px, labelname):
             			righttime_ans_tmp = Counter(righttime_ans)
             			right_ans = righttime_ans_tmp.most_common(1)[0]
             			#print right_ans[0]
-            			show_frame = printing_word(show_frame, "Your right Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 0, 0)
+            			show_frame = printing_word(show_frame, "Your Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 4, 400)
         		if False:
 				leftframe = leftframe[lefthand[1]:lefthand[1]+lefthand[3], lefthand[0]:lefthand[0]+lefthand[2]]
             			leftimg = Image.fromarray(leftframe, 'RGB')
@@ -191,9 +190,9 @@ def output(cap, pred, keep_prob, px, labelname):
             			break
 		if odd!=10:
         		odd+=1
-        		time_ans_tmp = Counter(time_ans)
-        		ans = time_ans_tmp.most_common(1)[0]
-        		show_frame = printing_word(show_frame, "Your Hand Sign is: "+str(int(ans[0])), 60, 3, 470)
+        		#righttime_ans_tmp = Counter(righttime_ans)
+        		#right_ans = righttime_ans_tmp.most_common(1)[0]
+        		show_frame = printing_word(show_frame, "Your Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 4, 400)
         		cv2.imshow('frame', show_frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
             			break
