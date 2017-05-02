@@ -111,11 +111,7 @@ def init():
 def loadtensorflow():
 	global sess, all_vars
 	sess = tf.Session()
-<<<<<<< HEAD
 	new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0426.meta')
-=======
-	new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0420.meta')
->>>>>>> 11e1729e6803cbf8d54bc58e9b742094e2547c03
 	new_saver.restore(sess, tf.train.latest_checkpoint('../Model/./'))
 	all_vars = tf.trainable_variables()
 	summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', sess.graph)
@@ -147,13 +143,10 @@ def get_pic(frame):
         return flat_arr
 
 def output(cap, pred, keep_prob, px, labelname):
-<<<<<<< HEAD
 	for x in range(len(labelname)):
 		if labelname[x]=='non':
 			nonnum = x
 			break
-=======
->>>>>>> 11e1729e6803cbf8d54bc58e9b742094e2547c03
 	while(1):
 		global count, head_count, righttime_ans, leftime_ans, detect_postion, head_postion, odd
 		righthand = np.zeros(4)
@@ -177,21 +170,14 @@ def output(cap, pred, keep_prob, px, labelname):
 				rightflat_arr = get_pic(rightframe)
             			rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
             			right_ans = sess.run(tf.argmax(pred,1), feed_dict={px: rightflat_arr, keep_prob: 1.})
-<<<<<<< HEAD
 				if int(right_ans[0])==nonnum:
 					continue
-=======
->>>>>>> 11e1729e6803cbf8d54bc58e9b742094e2547c03
             			for c in range(9):
                 			righttime_ans[c+1]=righttime_ans[c]
             			righttime_ans[0] = right_ans[0]
             			righttime_ans_tmp = Counter(righttime_ans)
             			right_ans = righttime_ans_tmp.most_common(1)[0]
             			#print right_ans[0]
-<<<<<<< HEAD
-=======
-            			show_frame = printing_word(show_frame, "Your Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 4, 400)
->>>>>>> 11e1729e6803cbf8d54bc58e9b742094e2547c03
         		if False:
 				leftframe = leftframe[lefthand[1]:lefthand[1]+lefthand[3], lefthand[0]:lefthand[0]+lefthand[2]]
             			leftimg = Image.fromarray(leftframe, 'RGB')
@@ -204,11 +190,8 @@ def output(cap, pred, keep_prob, px, labelname):
             			lefttime_ans[0] = left_ans[0]
             			lefttime_ans_tmp = Counter(lefttime_ans)
             			left_ans = lefttime_ans_tmp.most_common(1)[0]
-<<<<<<< HEAD
 				#print left_asn[0]
 			show_frame = printing_word(show_frame, "Your Hand Sign is: "+str(labelname[int(right_ans[0])]), 60, 4, 400)
-=======
->>>>>>> 11e1729e6803cbf8d54bc58e9b742094e2547c03
         		cv2.imshow('frame', show_frame)
         		if cv2.waitKey(1) & 0xFF == ord('q'):
             			break
