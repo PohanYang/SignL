@@ -32,9 +32,9 @@ class QtCapture(QtGui.QWidget):
         lay0.addWidget(self.video_frame)
         lay0.addWidget(self.detect_frame)
 
-	buf = QtGui.QHBoxLayout()
 	self.word = QLabel()
 	self.word.setText("Sign Language Buffer: ")
+	buf = QtGui.QHBoxLayout()
 	buf.addWidget(self.word)
 
 	lay = QVBoxLayout()
@@ -45,19 +45,55 @@ class QtCapture(QtGui.QWidget):
 
     def setFPS(self, fps):
         self.fps = fps
+    
+    def hand_detect(self, hsv):
+	hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2HSV)
+	mask2 = cv2.inRange(hsv,np.array([2,50,50]),np.array([15,255,255]))
+	blur = cv2.GaussianBlur(mask2,(5,5),0)
+	#Kernel matrices for morphological transformation
+        kernel_square = np.ones((11,11),np.uint8)
+        kernel_ellipse= cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        dilation = cv2.dilate(mask2,kernel_ellipse,iterations = 1)
+        erosion = cv2.erode(dilation,kernel_square,iterations = 1)
+        dilation2 = cv2.dilate(erosion,kernel_ellipse,iterations = 1)
+        filtered = cv2.medianBlur(dilation2,5)
+        kernel_ellipse= cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(8,8))
+        dilation2 = cv2.dilate(filtered,kernel_ellipse,iterations = 1)
+        kernel_ellipse= cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        dilation3 = cv2.dilate(filtered,kernel_ellipse,iterations = 1)
+        median = cv2.medianBlur(dilation2,5)
+        ret, thresh = cv2.threshold(blur,70,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+        ret,thresh = cv2.threshold(median,127,255,0)
+        #Find contours of the filtered frame
+        contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+        max_area=100
+        ci=0
+        for i in range(len(contours)):
+            cnt=contours[i]
+            area = cv2.contourArea(cnt)
+            if(area>max_area):
+                max_area=area
+                ci=i
+        #Largest area contour
+        if len(contours)==0:
+            return [0,0,0,0]
+        cnts = contours[ci]
+        x,y,w,h = cv2.boundingRect(cnts)
+        return x,y,w,h
 
     def nextFrameSlot(self):
         ret, frame = self.cap.read()
 	hsv = np.copy(frame)
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-	hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2HSV)
+	x,y,w,h = self.hand_detect(hsv)
+	print x,y,w,h
         img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap.fromImage(img)
-        detimg = QtGui.QImage(hsv, hsv.shape[1], hsv.shape[0], QtGui.QImage.Format_RGB888)
-        detpix = QtGui.QPixmap.fromImage(detimg)
+        #detimg = QtGui.QImage(hsv, hsv.shape[1], hsv.shape[0], QtGui.QImage.Format_RGB888)
+        #detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
-        self.detect_frame.setPixmap(detpix)
+        #self.detect_frame.setPixmap(detpix)
 
     def start(self):
         self.timer = QtCore.QTimer()
@@ -120,18 +156,6 @@ class ControlWindow(QtGui.QWidget):
             self.capture.setWindowFlags(QtCore.Qt.Tool)
         self.capture.start()
         self.capture.show()
-
-    def endCapture(self):
-        self.capture.deleteLater()
-        self.capture = None
-
-    # ------ Modification ------ #
-    def saveCapture(self):
-        if self.capture:
-            self.capture.capture()
-    # ------ Modification ------ #
-
-
 
 if __name__ == '__main__':
 
