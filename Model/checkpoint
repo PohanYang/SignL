@@ -1,3 +1,2 @@
-model_checkpoint_path: "NIN-Model-0504"
-all_model_checkpoint_paths: "NIN-Model-0502"
-all_model_checkpoint_paths: "NIN-Model-0504"
+model_checkpoint_path: "NIN-Model-0504-2"
+all_model_checkpoint_paths: "NIN-Model-0504-2"
