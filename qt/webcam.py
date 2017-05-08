@@ -21,6 +21,7 @@ class QtCapture(QtGui.QWidget):
         super(QtGui.QWidget, self).__init__()
 
         self.fps = 24
+	self.detect_postion = np.zeros((3,4))
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -46,7 +47,7 @@ class QtCapture(QtGui.QWidget):
     def setFPS(self, fps):
         self.fps = fps
     
-    def hand_detect(self, hsv):
+    def DetectObject(self, hsv):
 	hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2HSV)
 	mask2 = cv2.inRange(hsv,np.array([2,50,50]),np.array([15,255,255]))
 	blur = cv2.GaussianBlur(mask2,(5,5),0)
@@ -81,19 +82,45 @@ class QtCapture(QtGui.QWidget):
         x,y,w,h = cv2.boundingRect(cnts)
         return x,y,w,h
 
+    def classify3(self, righthand, lefthand):
+        self.detect_postion = sorted(self.detect_postion,key=lambda l:l[0], reverse=True)
+        self.detect_postion = array(self.detect_postion)
+	if self.detect_postion[2][0]==0 and self.detect_postion[2][1]==0 and self.detect_postion[2][2]==0 and self.detect_postion[1][0]==0 and self.detect_postion[1][1]==0 and self.detect_postion[1][2]==0:
+	    return righthand, lefthand
+	elif self.detect_postion[2][0]==0 and self.detect_postion[2][1]==0 and self.detect_postion[2][2]==0 and self.detect_postion[1][0]!=0 and self.detect_postion[1][1]!=0 and self.detect_postion[1][2]!=0:
+            righthand = self.detect_postion[1]
+            return righthand, lefthand
+	else:
+	    righthand = self.detect_postion[2]
+            lefthand = self.detect_postion[0]
+	    return righthand, lefthand
+	
+
     def nextFrameSlot(self):
+	righthand = np.zeros(4)
+        lefthand = np.zeros(4)
         ret, frame = self.cap.read()
 	hsv = np.copy(frame)
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-	x,y,w,h = self.hand_detect(hsv)
-	print x,y,w,h
+	for detect in range(3):
+	    x,y,w,h = self.DetectObject(hsv)
+	    self.detect_postion[detect]=[x,y,w,h]
+            hsv[int(y*0.7):int(y+1.3*h),int(x*0.7):int(x+1.3*w),:]=0
+	self.detect_postion = self.detect_postion.astype(int)
+	righthand, lefthand = self.classify3(righthand, lefthand)
+	#self.word.setText("Sign Language Buffer: "+str(x)+str(y)+str(w)+str(h))	
         img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap.fromImage(img)
-        #detimg = QtGui.QImage(hsv, hsv.shape[1], hsv.shape[0], QtGui.QImage.Format_RGB888)
-        #detpix = QtGui.QPixmap.fromImage(detimg)
+	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
+	if righthand[0]!=0:
+	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
+	if lefthand[0]!=0:
+	    cv2.circle(hp, (lefthand[0]+(lefthand[3]/2),lefthand[1]+(lefthand[2]/2)), 5, (0,255,0), -1)
+        detimg = QtGui.QImage(hp, hp.shape[1], hp.shape[0], QtGui.QImage.Format_RGB888)
+        detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
-        #self.detect_frame.setPixmap(detpix)
+        self.detect_frame.setPixmap(detpix)
 
     def start(self):
         self.timer = QtCore.QTimer()
