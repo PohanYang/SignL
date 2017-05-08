@@ -17,10 +17,38 @@ from PIL import ImageFont
 from PIL import ImageDraw
 
 class QtCapture(QtGui.QWidget):
+    def loadtensorflow(self):
+        self.sess = tf.Session()
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0504.meta')
+        new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
+        self.all_vars = tf.trainable_variables()
+        summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)
+        #summary_writer = tf.train.SummaryWriter('/tmp/rgbcnntest', sess.graph)
+        self.pred = tf.get_default_graph().get_tensor_by_name("pred/Reshape:0")
+        self.keep_prob = tf.get_default_graph().get_tensor_by_name("keep_prob:0")
+        self.px = tf.get_default_graph().get_tensor_by_name("placeholder_x:0")
+        #print [n.name for n in tf.get_default_graph().as_graph_def().node if "pred" in n.name]
+        return
+
+    def loadanswer(self):
+        with open("labels.p", "rb") as fp:
+                self.labelname = pickle.load(fp)
+        print "Sucessful Load Model"
+        return
+
+    def get_pic(self, frame):
+        frame = Image.fromarray(frame, 'RGB')
+        frame = frame.resize((60,50), Image.BILINEAR)
+        flat_arr = np.array(frame)
+        return flat_arr
+
     def __init__(self, *args):
         super(QtGui.QWidget, self).__init__()
-
+	self.setStyleSheet('font-size: 20pt')
+	self.loadtensorflow()
+	self.loadanswer()
         self.fps = 24
+	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
@@ -34,7 +62,7 @@ class QtCapture(QtGui.QWidget):
         lay0.addWidget(self.detect_frame)
 
 	self.word = QLabel()
-	self.word.setText("Sign Language Buffer: ")
+	self.word.setText("Detect Sign Pose: ")
 	buf = QtGui.QHBoxLayout()
 	buf.addWidget(self.word)
 
@@ -100,6 +128,7 @@ class QtCapture(QtGui.QWidget):
 	righthand = np.zeros(4)
         lefthand = np.zeros(4)
         ret, frame = self.cap.read()
+	rightframe = np.copy(frame)
 	hsv = np.copy(frame)
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -109,18 +138,27 @@ class QtCapture(QtGui.QWidget):
             hsv[int(y*0.7):int(y+1.3*h),int(x*0.7):int(x+1.3*w),:]=0
 	self.detect_postion = self.detect_postion.astype(int)
 	righthand, lefthand = self.classify3(righthand, lefthand)
-	#self.word.setText("Sign Language Buffer: "+str(x)+str(y)+str(w)+str(h))	
         img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap.fromImage(img)
 	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
 	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
+	    rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
+	    rightflat_arr = self.get_pic(rightframe)
+	    rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
+            right_ans = self.sess.run(tf.argmax(self.pred,1), feed_dict={self.px: rightflat_arr, self.keep_prob: 1.})
+	    for c in range(9):
+	        self.righttime_ans[c+1]=self.righttime_ans[c]
+            self.righttime_ans[0] = right_ans[0]
+            righttime_ans_tmp = Counter(self.righttime_ans)
+            right_ans = righttime_ans_tmp.most_common(1)[0]
 	if lefthand[0]!=0:
 	    cv2.circle(hp, (lefthand[0]+(lefthand[3]/2),lefthand[1]+(lefthand[2]/2)), 5, (0,255,0), -1)
         detimg = QtGui.QImage(hp, hp.shape[1], hp.shape[0], QtGui.QImage.Format_RGB888)
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
+	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))	
 
     def start(self):
         self.timer = QtCore.QTimer()
