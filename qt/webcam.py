@@ -19,7 +19,7 @@ from PIL import ImageDraw
 class QtCapture(QtGui.QWidget):
     def loadtensorflow(self):
         self.sess = tf.Session()
-        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0504.meta')
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0504-2.meta')
         new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
         self.all_vars = tf.trainable_variables()
         summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)
@@ -48,6 +48,7 @@ class QtCapture(QtGui.QWidget):
 	self.loadtensorflow()
 	self.loadanswer()
         self.fps = 24
+	self.counter = 8
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
         self.cap = cv2.VideoCapture(0)
@@ -125,11 +126,11 @@ class QtCapture(QtGui.QWidget):
 	
 
     def nextFrameSlot(self):
-	righthand = np.zeros(4)
-        lefthand = np.zeros(4)
         ret, frame = self.cap.read()
 	rightframe = np.copy(frame)
 	hsv = np.copy(frame)
+	righthand = np.zeros(4)
+        lefthand = np.zeros(4)
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	for detect in range(3):
@@ -143,22 +144,27 @@ class QtCapture(QtGui.QWidget):
 	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
 	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
-	    rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
-	    rightflat_arr = self.get_pic(rightframe)
-	    rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
-            right_ans = self.sess.run(tf.argmax(self.pred,1), feed_dict={self.px: rightflat_arr, self.keep_prob: 1.})
-	    for c in range(9):
-	        self.righttime_ans[c+1]=self.righttime_ans[c]
-            self.righttime_ans[0] = right_ans[0]
-            righttime_ans_tmp = Counter(self.righttime_ans)
-            right_ans = righttime_ans_tmp.most_common(1)[0]
+	    if self.counter==8:
+		self.counter=0
+	        rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
+	        rightflat_arr = self.get_pic(rightframe)
+	        rightflat_arr = np.reshape(rightflat_arr,[-1,50,60,3])
+                right_ans = self.sess.run(tf.argmax(self.pred,1), feed_dict={self.px: rightflat_arr, self.keep_prob: 1.})
+	        for c in range(9):
+	            self.righttime_ans[c+1]=self.righttime_ans[c]
+                self.righttime_ans[0] = right_ans[0]
+                righttime_ans_tmp = Counter(self.righttime_ans)
+                right_ans = righttime_ans_tmp.most_common(1)[0]
+	    else:
+	        self.counter = self.counter+1
 	if lefthand[0]!=0:
 	    cv2.circle(hp, (lefthand[0]+(lefthand[3]/2),lefthand[1]+(lefthand[2]/2)), 5, (0,255,0), -1)
         detimg = QtGui.QImage(hp, hp.shape[1], hp.shape[0], QtGui.QImage.Format_RGB888)
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
-	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))	
+	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+	self.counter = self.counter+1
 
     def start(self):
         self.timer = QtCore.QTimer()
