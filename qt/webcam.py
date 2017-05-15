@@ -51,6 +51,7 @@ class QtCapture(QtGui.QWidget):
 	self.counter = 8
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
+	self.pout = [0, 0, 0]
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -63,9 +64,13 @@ class QtCapture(QtGui.QWidget):
         lay0.addWidget(self.detect_frame)
 
 	self.word = QLabel()
-	self.word.setText("Detect Sign Pose: ")
+	self.word.setText("CNN Detect Sign Pose: ")
+	self.bu = QLabel()
+	self.bu.setText("Ready to estimation...")
+	
 	buf = QtGui.QHBoxLayout()
 	buf.addWidget(self.word)
+	buf.addWidget(self.bu)
 
 	lay = QVBoxLayout()
 	lay.addLayout(lay0)
@@ -164,6 +169,11 @@ class QtCapture(QtGui.QWidget):
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
 	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+	#self.bu.setText("You said:\na")
+	self.bu.setText("You said:\n"+str(self.pout[0])+"\n"+str(self.pout[1])+"\n"+str(self.pout[2]))
+	print "AAA"+righthand[0]+lefthand[0]
+	if righthand[0]==0 and lefthand[0]==0:
+		self.pout[1] = self.pout[1]+1
 	self.counter = self.counter+1
 
     def start(self):

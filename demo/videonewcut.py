@@ -112,7 +112,7 @@ def init():
 def loadtensorflow():
 	global sess, all_vars
 	sess = tf.Session()
-	new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0420.meta')
+	new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0504-2.meta')
 	new_saver.restore(sess, tf.train.latest_checkpoint('../Model/./'))
 	all_vars = tf.trainable_variables()
 	summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', sess.graph)

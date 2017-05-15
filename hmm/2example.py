@@ -13,11 +13,17 @@ n_states = len(states)
 observations = ["A", "B", "C", "D"]
 n_observations = len(observations)
 
-start_probability = rand_array(n_states, 1)
+start_probability = np.array([0.2, 0.2, 0.3, 0.3])
 
-transition_probability = rand_array(n_states, n_states)
+transition_probability = np.array([[0.1, 0.4, 0.2, 0.3],
+				[0.2, 0.1, 0.4, 0.3],
+				[0.1, 0.1, 0.3, 0.5],
+				[0.2, 0.2, 0.4, 0.2]])
 
-emission_probability = rand_array(n_states, n_observations)
+emission_probability = np.array([[0.1, 0.2, 0.3, 0.4],
+                                [0.2, 0.2, 0.4, 0.2],
+                                [0.4, 0.2, 0.1, 0.3],
+                                [0.2, 0.3, 0.3, 0.2]])
 
 model = hmm.MultinomialHMM(n_components=n_states, n_iter=1000)
 model.startprob=start_probability
@@ -25,7 +31,7 @@ model.transmat=transition_probability
 model.emissionprob=emission_probability
 
 #print model.transmat
-#print model.emissionprob
+#print model.emissionprob_.shape
 #print model.startprob
 #print
 
@@ -38,7 +44,7 @@ set1 = np.array(([0,1,1,2,0,1,2,0,0,1,2],
 		[2,0,2,2,0,1,2,0],
 		[2,0,1,2,0,1,2,0],
 		[2,0,1,2,0],
-		[2,0,1,2,0]))
+		[3,0,1,2,0]))
 for i in range(9):
 	seq = np.array([set1[i]]).T
 	model = model.fit(seq)
@@ -65,11 +71,11 @@ set2 = np.array(([1,1,3,1,2,2,1,2],
 		[2,2,1,0,1,1],
 		[0,0,2,2,1,1,1],
 		[1,1,0,1,1,3,0,2],
-		[2,2,0,3,0,1,0,1],
+		[2,2,0,2,0,1,0,1],
 		[1,1,3,1,2,2,1,0,0],
 		[0,1,1,1,3,1,0,1,0],
 		[2,2,2,2,2],
-		[3,1,3,0,0]))
+		[2,1,2,0,0]))
 for i in range(9):
 	seq2 = np.array([set2[i]]).T
 	model2 = model2.fit(seq)
@@ -80,7 +86,7 @@ for i in range(9):
 #print model.startprob
 #print
 
-bob_says = np.array([[3,1,0,0,0]]).T
+bob_says = np.array([[3,0,1,2,0]]).T
 logprob2, alice_hears2 = model2.decode(bob_says, algorithm="viterbi")
 print "logprob2", exp(logprob2)
 logprob, alice_hears = model.decode(bob_says, algorithm="viterbi")
