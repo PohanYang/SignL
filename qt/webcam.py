@@ -170,10 +170,18 @@ class QtCapture(QtGui.QWidget):
         self.detect_frame.setPixmap(detpix)
 	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
 	#self.bu.setText("You said:\na")
+	print "6666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
+	print righthand
+	if righthand[0]!=0:
+	    print "??????????????????????????????????????????????????????????????????????????????????????????????"
+	    self.pout[1] = self.pout[1]+1
+	#elif lefthand[0]!=0:
+	#    self.pout[0] = self.pout[0]+1
+	else:
+	    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	    self.pout[2] = self.pout[2]+1
+	#self.pout[1] = self.pout[1]+1
 	self.bu.setText("You said:\n"+str(self.pout[0])+"\n"+str(self.pout[1])+"\n"+str(self.pout[2]))
-	print "AAA"+righthand[0]+lefthand[0]
-	if righthand[0]==0 and lefthand[0]==0:
-		self.pout[1] = self.pout[1]+1
 	self.counter = self.counter+1
 
     def start(self):
