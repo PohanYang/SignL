@@ -136,6 +136,7 @@ class QtCapture(QtGui.QWidget):
 	hsv = np.copy(frame)
 	righthand = np.zeros(4)
         lefthand = np.zeros(4)
+	right_ans = 0
         # My webcam yields frames in BGR format
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 	for detect in range(3):
@@ -168,17 +169,14 @@ class QtCapture(QtGui.QWidget):
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
-	self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+	if right_ans:
+	    self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
 	#self.bu.setText("You said:\na")
-	print "6666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666"
-	print righthand
 	if righthand[0]!=0:
-	    print "??????????????????????????????????????????????????????????????????????????????????????????????"
 	    self.pout[1] = self.pout[1]+1
 	#elif lefthand[0]!=0:
 	#    self.pout[0] = self.pout[0]+1
 	else:
-	    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 	    self.pout[2] = self.pout[2]+1
 	#self.pout[1] = self.pout[1]+1
 	self.bu.setText("You said:\n"+str(self.pout[0])+"\n"+str(self.pout[1])+"\n"+str(self.pout[2]))
