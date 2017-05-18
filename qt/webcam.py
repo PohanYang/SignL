@@ -172,10 +172,8 @@ class QtCapture(QtGui.QWidget):
 	if right_ans:
 	    self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
 	#self.bu.setText("You said:\na")
-	if righthand[0]!=0:
+	if righthand[0]!=0 or lefthand[0]!=0:
 	    self.pout[1] = self.pout[1]+1
-	#elif lefthand[0]!=0:
-	#    self.pout[0] = self.pout[0]+1
 	else:
 	    self.pout[2] = self.pout[2]+1
 	#self.pout[1] = self.pout[1]+1
