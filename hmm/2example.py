@@ -38,17 +38,18 @@ model.emissionprob=emission_probability
 #print
 
 # predict a sequence of hidden states based on visible states                                                                                                                                                    
-set1 = np.array(([0,1,1,2,3,1,0,1,2],
+set1 = np.array(([0,1,2,2,3,1,2],
                 [0,1,2,0,1,2],
                 [0,3,2,0,0,1,2],
                 [1,1,0,1,2,0,1],
                 [1,2,3,0,1,2,2,0,1],
                 [2,0,3,2,0,1,2,0],
-                [2,0,1,2,0,1,2,0],
+                [2,0,1,2,0,1,2,4],
                 [2,0,1,2,0],
                 [2,0,1,2,0]))
 
 for i in range(9):
+	print i
 	seq = np.array([set1[i]]).T
 	model = model.fit(seq)
 
@@ -89,8 +90,9 @@ for i in range(9):
 #print model.startprob
 #print
 
-bob_says = np.array([[0,1,2,2,1]]).T
-logprob2, alice_hears2 = model2.decode(bob_says, algorithm="viterbi")
+bob_says = np.array([[0,1,3,2,1]]).T
+if model2.decode(bob_says, algorithm="viterbi"):
+	logprob2, alice_hears2 = model2.decode(bob_says, algorithm="viterbi")
 print "logprob2", exp(logprob2)
 logprob, alice_hears = model.decode(bob_says, algorithm="viterbi")
 print "logprob", exp(logprob)
