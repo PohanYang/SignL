@@ -13,19 +13,24 @@ n_states = len(states)
 observations = ["A", "B", "C", "D", "E"]
 n_observations = len(observations)
 
-start_probability = np.array([0.2, 0.2, 0.2, 0.3, 0.1])
+start_probability = rand_array(n_states, 1)
 
-transition_probability = np.array([[0.1, 0.3, 0.2, 0.3, 0.1],
-				[0.2, 0.1, 0.2, 0.3, 0.2],
-				[0.1, 0.1, 0.3, 0.2, 0.3],
-				[0.2, 0.1, 0.4, 0.2, 0.1],
-				[0.3, 0.1, 0.1, 0.3, 0.2]])
+transition_probability = rand_array(n_states, n_states)
 
-emission_probability = np.array([[0.1, 0.1, 0.1, 0.4, 0.3],
-                                [0.2, 0.2, 0.2, 0.2, 0.2],
-                                [0.3, 0.2, 0.1, 0.3, 0.1],
-                                [0.2, 0.2, 0.3, 0.2, 0.1],
-				[0.2, 0.2, 0.3, 0.2, 0.1]])
+emission_probability = rand_array(n_states, n_observations)
+#start_probability = np.array([0.2, 0.2, 0.2, 0.3, 0.1])
+
+#transition_probability = np.array([[0.1, 0.3, 0.2, 0.3, 0.1],
+#				[0.2, 0.1, 0.2, 0.3, 0.2],
+#				[0.1, 0.1, 0.3, 0.2, 0.3],
+#				[0.2, 0.1, 0.4, 0.2, 0.1],
+#				[0.3, 0.1, 0.1, 0.3, 0.2]])
+
+#emission_probability = np.array([[0.1, 0.1, 0.1, 0.4, 0.3],
+#                                [0.2, 0.2, 0.2, 0.2, 0.2],
+#                                [0.3, 0.2, 0.1, 0.3, 0.1],
+#                                [0.2, 0.2, 0.3, 0.2, 0.1],
+#				[0.2, 0.2, 0.3, 0.2, 0.1]])
 
 model = hmm.MultinomialHMM(n_components=n_states, n_iter=1000)
 model.startprob=start_probability
@@ -38,25 +43,19 @@ model.emissionprob=emission_probability
 #print
 
 # predict a sequence of hidden states based on visible states                                                                                                                                                    
-set1 = np.array(([0,1,1,2,3,1,0,1,2],
-		[0,1,2,0,1,2],
+set1 = [[0,1,1,2,3,1,0,1,2],
+		[0,1,2,3,3,2,1,2,3,2,3,0,1,2],
 		[0,3,2,0,0,1,2],
 		[1,1,0,1,2,0,1],
 		[1,2,0,0,1,2,2,0,1],
 		[2,0,3,2,0,1,2,0],
 		[2,0,1,2,0,1,2,0],
 		[2,0,1,2,0],
-		[2,0,1,2,0]))
-for i in range(9):
+		[2,0,1,2,0]]
+for i in range(len(set1)):
 	seq = np.array([set1[i]]).T
 	model = model.fit(seq)
 
-
-start_probability2 = rand_array(n_states, 1)
-
-transition_probability2 = rand_array(n_states, n_states)
-
-emission_probability2 = rand_array(n_states, n_observations)
 
 
 bob_says = np.array([[0,0,1,2,0,2,2,1]]).T

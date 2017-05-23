@@ -10,6 +10,7 @@ import glob
 import tensorflow as tf
 import math
 import pickle
+import fbchat
 from numpy import array
 from collections import Counter
 from PIL import Image
@@ -48,12 +49,13 @@ class QtCapture(QtGui.QWidget):
 	self.loadtensorflow()
 	self.loadanswer()
         self.fps = 24
-	self.counter = 8
+	self.counter = 25
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
 	self.pout = [0, 0, 0]
-	self.seq = []
-	self.seqlist = []
+	self.seq = np.zeros(200000)
+	self.pri = []
+	self.client = fbchat.Client("scure.le.1", sys.argv[1])
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -152,7 +154,7 @@ class QtCapture(QtGui.QWidget):
 	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
 	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
-	    if self.counter>8:
+	    if self.counter>25:
 	        self.counter=0
 	        rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
 	        rightflat_arr = self.get_pic(rightframe)
@@ -175,16 +177,23 @@ class QtCapture(QtGui.QWidget):
 	#self.bu.setText("You said:\na")
 	if righthand[0]!=0 or lefthand[0]!=0:
 	    if right_ans!=-1:
-	        self.seq = np.append(self.seq, [int(right_ans[0])])
+	        if Counter(self.righttime_ans).most_common(1)[0][1]==10:
+	            for c in range(199999):
+	                self.seq[c+1]=self.seq[c]
+	            self.seq[0] = Counter(self.righttime_ans).most_common(1)[0][0]
+	            if Counter(self.seq).most_common(1)[0][1]==200000:
+	                self.pri = np.append(self.pri, str(self.labelname[int(Counter(self.seq).most_common(1)[0][0])]))
+	                self.seq = np.zeros(200000)
+	    self.bu.setText("You will send:\n"+str(self.pri))
 	else:
-	    if self.seq!=[]:
-	        self.seq = map(int, self.seq)
-	        self.seqlist.append(self.seq)
-		self.seq=[]
-	        with open(sys.argv[1]+".npy", "wb") as fp:
-		    pickle.dump(self.seqlist, fp)
+	    if self.pri!=[]:
+	        #self.seq = map(int, self.seq)
+	        #self.seqlist.append(self.seq)
+		#all_friends = self.client.getAllUsers()
+		#friend = all_friends[0]
+		#sent = self.client.send(friend.uid, str(self.labelname[int(self.seq[0])]))
+		self.pri=[]
 	#self.pout[1] = self.pout[1]+1
-	self.bu.setText("List:\n"+str(len(self.seqlist)))
 	self.counter = self.counter+1
 
     def start(self):
