@@ -59,6 +59,17 @@ class QtCapture(QtGui.QWidget):
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
+	
+	laysoc = QVBoxLayout()
+	self.fblabel = QLabel()
+        pixmap = QPixmap('facebook-header.png')
+        pixmap1 = pixmap.scaled(300,50)
+        self.fblabel.setPixmap(pixmap1)
+	self.social = QLabel()
+	self.fblabel.move(0,0)
+	self.social.resize(300,500)
+	laysoc.addWidget(self.fblabel)
+	laysoc.addWidget(self.social)
 
         self.video_frame = QtGui.QLabel()
         self.detect_frame = QtGui.QLabel()
@@ -66,6 +77,7 @@ class QtCapture(QtGui.QWidget):
         lay0.setMargin(10)
         lay0.addWidget(self.video_frame)
         lay0.addWidget(self.detect_frame)
+	lay0.addLayout(laysoc)
 
 	self.word = QLabel()
 	self.word.setText("CNN Detect Sign Pose: ")
