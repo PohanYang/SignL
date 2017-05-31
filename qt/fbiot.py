@@ -20,7 +20,7 @@ from PIL import ImageDraw
 class QtCapture(QtGui.QWidget):
     def loadtensorflow(self):
         self.sess = tf.Session()
-        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0504-2.meta')
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0526.meta')
         new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
         self.all_vars = tf.trainable_variables()
         summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)
@@ -43,6 +43,18 @@ class QtCapture(QtGui.QWidget):
         flat_arr = np.array(frame)
         return flat_arr
 
+    def buildfriendlist(self):
+	end = 0
+	result = []
+	fl = self.client.getAllUsers()
+	for n in range(len(fl)):
+	    for m in range(len(str(fl[n]))):
+	    	if str(fl[n])[m] == "(":
+	            end = m-1
+	            break
+	    fl[n] = str(fl[n])[6:end]
+	return fl
+
     def __init__(self, *args):
         super(QtGui.QWidget, self).__init__()
 	self.setStyleSheet('font-size: 20pt')
@@ -56,20 +68,21 @@ class QtCapture(QtGui.QWidget):
 	self.seq = np.zeros(200000)
 	self.pri = []
 	self.client = fbchat.Client("scure.le.1", sys.argv[1])
+	self.fbstate = 1
+	self.friendlist = self.buildfriendlist()
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
 	
 	laysoc = QVBoxLayout()
 	self.fblabel = QLabel()
-        pixmap = QPixmap('facebook-header.png')
-        pixmap1 = pixmap.scaled(300,50)
-        self.fblabel.setPixmap(pixmap1)
 	self.social = QLabel()
-	self.fblabel.move(0,0)
-	self.social.resize(300,500)
+	fbimg = QPixmap('facebook-header.png')
+        fbimg = fbimg.scaled(600,100)
+        self.fblabel.setPixmap(fbimg)
 	laysoc.addWidget(self.fblabel)
 	laysoc.addWidget(self.social)
+	laysoc.setAlignment(QtCore.Qt.AlignTop)
 
         self.video_frame = QtGui.QLabel()
         self.detect_frame = QtGui.QLabel()
@@ -82,7 +95,7 @@ class QtCapture(QtGui.QWidget):
 	self.word = QLabel()
 	self.word.setText("CNN Detect Sign Pose: ")
 	self.bu = QLabel()
-	self.bu.setText("Ready to estimation...")
+	#self.bu.setText("Ready to estimation...")
 	
 	buf = QtGui.QHBoxLayout()
 	buf.addWidget(self.word)
@@ -144,7 +157,17 @@ class QtCapture(QtGui.QWidget):
 	    righthand = self.detect_postion[2]
             lefthand = self.detect_postion[0]
 	    return righthand, lefthand
-	
+
+    def socialinfo(self, fbstate):
+	alp = ['a','b','c','d','e']
+	fl = ''
+	for idx in range(len(self.friendlist)):
+	    fl = fl+"  "+str(alp[idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
+	if fbstate==1:    
+	    self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
+	if fbstate==2:
+	    
+	    
 
     def nextFrameSlot(self):
         ret, frame = self.cap.read()
@@ -196,7 +219,7 @@ class QtCapture(QtGui.QWidget):
 	            if Counter(self.seq).most_common(1)[0][1]==200000:
 	                self.pri = np.append(self.pri, str(self.labelname[int(Counter(self.seq).most_common(1)[0][0])]))
 	                self.seq = np.zeros(200000)
-	    self.bu.setText("You will send:\n"+str(self.pri))
+	    #self.bu.setText("You will send:\n"+str(self.pri))
 	else:
 	    if self.pri!=[]:
 	        #self.seq = map(int, self.seq)
@@ -207,6 +230,7 @@ class QtCapture(QtGui.QWidget):
 		self.pri=[]
 	#self.pout[1] = self.pout[1]+1
 	self.counter = self.counter+1
+	self.socialinfo(self.fbstate)
 
     def start(self):
         self.timer = QtCore.QTimer()
