@@ -54,6 +54,7 @@ class QtCapture(QtGui.QWidget):
 	self.pout = [0, 0, 0]
 	self.seq = []
 	self.seqlist = []
+	self.nonnum = 0
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -150,6 +151,7 @@ class QtCapture(QtGui.QWidget):
         img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap.fromImage(img)
 	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
+	self.word.setText("Detect Sign Pose:")
 	if righthand[0]!=0:
 	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
 	    if self.counter>8:
@@ -170,18 +172,20 @@ class QtCapture(QtGui.QWidget):
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
-	if right_ans!=-1:
-	    self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
-	#self.bu.setText("You said:\na")
-	if righthand[0]!=0 or lefthand[0]!=0:
+	if (righthand[0]!=0 or lefthand[0]!=0) and self.nonnum<10:
 	    if right_ans!=-1:
-	        self.seq = np.append(self.seq, [int(right_ans[0])])
+	        self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+	        if self.labelname[int(right_ans[0])]!='non':
+	            self.seq = np.append(self.seq, [int(right_ans[0])])
+	        else:
+	            self.nonnum+=1
 	else:
+	    self.nonnum=0
 	    if self.seq!=[]:
 	        self.seq = map(int, self.seq)
 	        self.seqlist.append(self.seq)
-		self.seq=[]
-	        with open(sys.argv[1]+".npy", "wb") as fp:
+	        self.seq=[]
+	        with open("hmm_data/"+sys.argv[1]+".npy", "wb") as fp:
 		    pickle.dump(self.seqlist, fp)
 	#self.pout[1] = self.pout[1]+1
 	self.bu.setText("List:\n"+str(len(self.seqlist)))

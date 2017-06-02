@@ -163,9 +163,7 @@ class QtCapture(QtGui.QWidget):
 	fl = ''
 	for idx in range(len(self.friendlist)):
 	    fl = fl+"  "+str(alp[idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
-	if fbstate==1:    
-	    self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
-	if fbstate==2:
+	self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
 	    
 	    
 
@@ -210,27 +208,30 @@ class QtCapture(QtGui.QWidget):
 	if right_ans!=-1:
 	    self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
 	#self.bu.setText("You said:\na")
-	if righthand[0]!=0 or lefthand[0]!=0:
-	    if right_ans!=-1:
-	        if Counter(self.righttime_ans).most_common(1)[0][1]==10:
-	            for c in range(199999):
-	                self.seq[c+1]=self.seq[c]
-	            self.seq[0] = Counter(self.righttime_ans).most_common(1)[0][0]
-	            if Counter(self.seq).most_common(1)[0][1]==200000:
-	                self.pri = np.append(self.pri, str(self.labelname[int(Counter(self.seq).most_common(1)[0][0])]))
-	                self.seq = np.zeros(200000)
-	    #self.bu.setText("You will send:\n"+str(self.pri))
-	else:
-	    if self.pri!=[]:
-	        #self.seq = map(int, self.seq)
-	        #self.seqlist.append(self.seq)
-		#all_friends = self.client.getAllUsers()
-		#friend = all_friends[0]
-		#sent = self.client.send(friend.uid, str(self.labelname[int(self.seq[0])]))
-		self.pri=[]
+	#####old vision#####
+	#if righthand[0]!=0 or lefthand[0]!=0:
+	#    if right_ans!=-1:
+	#        if Counter(self.righttime_ans).most_common(1)[0][1]==10:
+	#            for c in range(199999):
+	#                self.seq[c+1]=self.seq[c]
+	#            self.seq[0] = Counter(self.righttime_ans).most_common(1)[0][0]
+	#            if Counter(self.seq).most_common(1)[0][1]==200000:
+	#                self.pri = np.append(self.pri, str(self.labelname[int(Counter(self.seq).most_common(1)[0][0])]))
+	#                self.seq = np.zeros(200000)
+	#    #self.bu.setText("You will send:\n"+str(self.pri))
+	#else:
+	#    if self.pri!=[]:
+	#        #self.seq = map(int, self.seq)
+	#        #self.seqlist.append(self.seq)
+	#	#all_friends = self.client.getAllUsers()
+	#	#friend = all_friends[0]
+	#	#sent = self.client.send(friend.uid, str(self.labelname[int(self.seq[0])]))
+	#	self.pri=[]
 	#self.pout[1] = self.pout[1]+1
+	#####
 	self.counter = self.counter+1
-	self.socialinfo(self.fbstate)
+	if fbstate==1:
+	    self.socialinfo(self.fbstate)
 
     def start(self):
         self.timer = QtCore.QTimer()
