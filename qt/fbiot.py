@@ -20,7 +20,7 @@ from PIL import ImageDraw
 class QtCapture(QtGui.QWidget):
     def loadtensorflow(self):
         self.sess = tf.Session()
-        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0526.meta')
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0602.meta')
         new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
         self.all_vars = tf.trainable_variables()
         summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)
@@ -67,11 +67,12 @@ class QtCapture(QtGui.QWidget):
 	self.pout = [0, 0, 0]
 	self.seq = np.zeros(200000)
 	self.nonnum = 0
-	self.alp = np.array(['a','b','c','d','e'],[0,0,0,0,0])
+	self.alp = [['a','b','c','d','e','f'],[0,0,0,0,0,0]]
 	self.pri = []
 	self.client = fbchat.Client("scure.le.1", sys.argv[1])
 	self.fbstate = 1
 	self.friendlist = self.buildfriendlist()
+	self.chof = 'non'
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -160,15 +161,25 @@ class QtCapture(QtGui.QWidget):
             lefthand = self.detect_postion[0]
 	    return righthand, lefthand
 
-    def socialinfo(self, fbstate, ans):
+    def socialinfo(self, ans):
 	##self.alp = ['a','b','c','d','e']
 	fl = ''
 	for idx in range(len(self.friendlist)):
 	    fl = fl+"  "+str(self.alp[0][idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
 	self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
+	if 10 in self.alp[1]:
+	    self.fbstate = 2
+	    self.chof = self.friendlist[self.alp[1].index(10)]
+	    self.social.setText("You are ready talk with "+self.chof)
+	    return
+	if ans in self.alp[0]:
+	    self.alp[1][self.alp[0].index(ans)]+=1
+	else:
+	    self.alp[1]=[0,0,0,0,0,0]
+	return
 	    
     def talkingbuffer(ans):
-	
+	return
 
     def nextFrameSlot(self):
         ret, frame = self.cap.read()
@@ -239,9 +250,9 @@ class QtCapture(QtGui.QWidget):
 	#self.pout[1] = self.pout[1]+1
 	#####
 	self.counter = self.counter+1
-	if fbstate==1:
-	    self.socialinfo(self.fbstate, right_ans[0])
-	if fbstate==2:
+	if self.fbstate==1:
+	    self.socialinfo(right_ans[0])
+	if self.fbstate==2:
 	    self.talkingbuffer(right_ans[0])
 
     def start(self):
