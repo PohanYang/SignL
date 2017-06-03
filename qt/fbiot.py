@@ -66,6 +66,8 @@ class QtCapture(QtGui.QWidget):
 	self.detect_postion = np.zeros((3,4))
 	self.pout = [0, 0, 0]
 	self.seq = np.zeros(200000)
+	self.nonnum = 0
+	self.alp = np.array(['a','b','c','d','e'],[0,0,0,0,0])
 	self.pri = []
 	self.client = fbchat.Client("scure.le.1", sys.argv[1])
 	self.fbstate = 1
@@ -158,14 +160,15 @@ class QtCapture(QtGui.QWidget):
             lefthand = self.detect_postion[0]
 	    return righthand, lefthand
 
-    def socialinfo(self, fbstate):
-	alp = ['a','b','c','d','e']
+    def socialinfo(self, fbstate, ans):
+	##self.alp = ['a','b','c','d','e']
 	fl = ''
 	for idx in range(len(self.friendlist)):
-	    fl = fl+"  "+str(alp[idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
+	    fl = fl+"  "+str(self.alp[0][idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
 	self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
 	    
-	    
+    def talkingbuffer(ans):
+	
 
     def nextFrameSlot(self):
         ret, frame = self.cap.read()
@@ -205,8 +208,14 @@ class QtCapture(QtGui.QWidget):
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
-	if right_ans!=-1:
-	    self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+	if (righthand[0]!=0 or lefthand[0]!=0) and self.nonnum<10:
+	    if right_ans!=-1:
+	        self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
+		if self.labelname[int(right_ans[0])]=='non':
+	            self.nonnum+=1
+	else:
+	    self.nonnum = 0
+	    ###here to send message###
 	#self.bu.setText("You said:\na")
 	#####old vision#####
 	#if righthand[0]!=0 or lefthand[0]!=0:
@@ -231,7 +240,9 @@ class QtCapture(QtGui.QWidget):
 	#####
 	self.counter = self.counter+1
 	if fbstate==1:
-	    self.socialinfo(self.fbstate)
+	    self.socialinfo(self.fbstate, right_ans[0])
+	if fbstate==2:
+	    self.talkingbuffer(right_ans[0])
 
     def start(self):
         self.timer = QtCore.QTimer()
