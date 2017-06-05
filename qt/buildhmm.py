@@ -1,16 +1,17 @@
 import numpy as np
 import pickle
+import sys
 from pomegranate import *
 
 
-with open("../qt/labels.p", "rb") as fp:
+with open("labels.p", "rb") as fp:
 	labelname = pickle.load(fp)
 #print labelname
 
 disc = []
 dic = {}
-for labelnum in range(37):
-	dic[str(labelnum)] = 0.27
+for labelnum in range(len(labelname)):
+	dic[str(labelnum)] = float(1)/float(len(labelname))
 
 d1 = DiscreteDistribution(dic)
 d2 = DiscreteDistribution(dic)
@@ -28,24 +29,27 @@ hmm.add_transition(s2, s1, 0.5)
 hmm.add_transition(s2, s2, 0.5)
 hmm.bake()
 
-with open("../qt/test_abbie.npy", "rb") as fp:
-    tabbie = pickle.load(fp)
-with open("../qt/test_matt.npy", "rb") as fp:
-    tmatt = pickle.load(fp)
+with open("hmm_data/"+sys.argv[1]+".npy", "rb") as fp:
+    model = pickle.load(fp)
 
 #print hmm.log_probability(map(str,tabbie[0]))
 #print hmm.log_probability(map(str,tmatt[0]))
 
-with open("../qt/abbie.npy", "rb") as fp:
-	abbie = pickle.load(fp)
+#with open("../qt/abbie.npy", "rb") as fp:
+#	abbie = pickle.load(fp)
 #with open("../qt/matt.npy", "rb") as fp:
 #	matt = pickle.load(fp)
 
-for n in range(len(abbie)):
-	abbie[n]=map(str,abbie[n])
-abbie.append(map(str, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36]))
-hmm.fit(abbie)
+print len(model)
+model = model[0:len(model)-5]
+for n in range(len(model)):
+	model[n]=map(str,model[n])
+model.append(map(str, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34]))
+
+hmm.fit(model)
 print "Training Done" 
 
-print hmm.log_probability(map(str,tabbie[0]))
-print hmm.log_probability(map(str,tmatt[0]))
+with open("hmm_data/"+sys.argv[1]+".p", "wb") as fp:
+    pickle.dump(hmm, fp)
+
+#print hmm.log_probability(map(str,yes[5]))

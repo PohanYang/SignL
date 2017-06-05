@@ -64,11 +64,11 @@ class QtCapture(QtGui.QWidget):
 	self.counter = 25
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
-	self.pout = [0, 0, 0]
+	#self.pout = [0, 0, 0]
 	self.seq = np.zeros(200000)
 	self.nonnum = 0
 	self.alp = [['a','b','c','d','e','f'],[0,0,0,0,0,0]]
-	self.pri = []
+	#self.pri = []
 	self.client = fbchat.Client("scure.le.1", sys.argv[1])
 	self.fbstate = 1
 	self.friendlist = self.buildfriendlist()
@@ -167,18 +167,26 @@ class QtCapture(QtGui.QWidget):
 	for idx in range(len(self.friendlist)):
 	    fl = fl+"  "+str(self.alp[0][idx])+". "+unicode(str(self.friendlist[idx]), "utf-8")+"\n"
 	self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
-	if 10 in self.alp[1]:
+	if 5 in self.alp[1]:
 	    self.fbstate = 2
-	    self.chof = self.friendlist[self.alp[1].index(10)]
-	    self.social.setText("You are ready talk with "+self.chof)
+	    self.chof = self.friendlist[self.alp[1].index(5)]
+	    self.social.setText("You are ready talk with "+unicode(self.chof, "utf-8"))
 	    return
-	if ans in self.alp[0]:
-	    self.alp[1][self.alp[0].index(ans)]+=1
+	if self.labelname[ans] in self.alp[0]:
+	    self.alp[1][self.alp[0].index(self.labelname[ans])]+=1
 	else:
 	    self.alp[1]=[0,0,0,0,0,0]
 	return
 	    
-    def talkingbuffer(ans):
+    def talkingbuffer(self, seq):
+	msbuffer = []
+	chofid = self.client.getUsers(self.chof)
+	last_message = self.client.getThreadInfo(chofid[0].uid, last_n=20)
+	last_message.reverse()
+	for message in last_message:
+	    if message.author.split(':')[1]==chofid[0].uid:
+	        msbuffer.append(self.chof+": "+message.body+"\n")
+	self.social.setText("You are talk with "+unicode(self.chof), "utf-8"+"\n"+msbuffer)
 	return
 
     def nextFrameSlot(self):
@@ -222,10 +230,19 @@ class QtCapture(QtGui.QWidget):
 	if (righthand[0]!=0 or lefthand[0]!=0) and self.nonnum<10:
 	    if right_ans!=-1:
 	        self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
-		if self.labelname[int(right_ans[0])]=='non':
+		if self.labelname[int(right_ans[0])]!='non':
+	            if self.fbstate==1:
+	                self.socialinfo(int(right_ans[0]))
+	            self.seq = np.append(self.seq, [int(right_ans[0])])
+	        else:
 	            self.nonnum+=1
 	else:
 	    self.nonnum = 0
+	    if self.seq!=[]:
+	        self.seq = map(int, self.seq)
+	        self.seq=[]
+	if self.fbstate==2:
+	    self.talkingbuffer(self.seq)
 	    ###here to send message###
 	#self.bu.setText("You said:\na")
 	#####old vision#####
@@ -250,10 +267,6 @@ class QtCapture(QtGui.QWidget):
 	#self.pout[1] = self.pout[1]+1
 	#####
 	self.counter = self.counter+1
-	if self.fbstate==1:
-	    self.socialinfo(right_ans[0])
-	if self.fbstate==2:
-	    self.talkingbuffer(right_ans[0])
 
     def start(self):
         self.timer = QtCore.QTimer()
