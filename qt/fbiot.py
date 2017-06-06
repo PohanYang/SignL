@@ -11,8 +11,10 @@ import tensorflow as tf
 import math
 import pickle
 import fbchat
+import chating
 from numpy import array
 from collections import Counter
+from pomegranate import *
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -47,13 +49,21 @@ class QtCapture(QtGui.QWidget):
 	end = 0
 	result = []
 	fl = self.client.getAllUsers()
+	ofl = self.client.getAllUsers()
 	for n in range(len(fl)):
 	    for m in range(len(str(fl[n]))):
 	    	if str(fl[n])[m] == "(":
 	            end = m-1
 	            break
 	    fl[n] = str(fl[n])[6:end]
-	return fl
+	return ofl, fl
+    def loadhmmmodel(self):
+	modellist = ['hello', 'ok', 'yes']
+	hmmmodel=[]
+	for model in modellist:
+	    with open("hmm_data/model/"+model+".p", "rb") as fp:
+	        hmmmodel.append(pickle.load(fp))
+	return hmmmodel
 
     def __init__(self, *args):
         super(QtGui.QWidget, self).__init__()
@@ -71,8 +81,12 @@ class QtCapture(QtGui.QWidget):
 	#self.pri = []
 	self.client = fbchat.Client("scure.le.1", sys.argv[1])
 	self.fbstate = 1
-	self.friendlist = self.buildfriendlist()
+	self.ofl, self.friendlist = self.buildfriendlist()
+	self.chofid = 0
 	self.chof = 'non'
+	self.tbcounter = 21
+	self.talkdelay = 0
+	self.hmmmodel = self.loadhmmmodel()
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -169,6 +183,7 @@ class QtCapture(QtGui.QWidget):
 	self.social.setText("Your Friend List:\n" + fl + "\nPlease sign alphabet who you want to talk")
 	if 5 in self.alp[1]:
 	    self.fbstate = 2
+	    self.chofid = self.ofl[self.alp[1].index(5)]
 	    self.chof = self.friendlist[self.alp[1].index(5)]
 	    self.social.setText("You are ready talk with "+unicode(self.chof, "utf-8"))
 	    return
@@ -179,14 +194,31 @@ class QtCapture(QtGui.QWidget):
 	return
 	    
     def talkingbuffer(self, seq):
-	msbuffer = []
-	chofid = self.client.getUsers(self.chof)
-	last_message = self.client.getThreadInfo(chofid[0].uid, last_n=20)
-	last_message.reverse()
-	for message in last_message:
-	    if message.author.split(':')[1]==chofid[0].uid:
-	        msbuffer.append(self.chof+": "+message.body+"\n")
-	self.social.setText("You are talk with "+unicode(self.chof), "utf-8"+"\n"+msbuffer)
+	if self.talkdelay <1:
+	    self.talkdelay+=1
+	    return
+	if self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)) and self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
+	     sentword = "Hello"
+	if self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
+	     sentword = "OK"
+	if self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)):
+	     sentword = "Yes"
+	sent = self.client.send(self.chofid.uid, str(sentword))
+	with open("fbchat.p", "rb") as fp:
+            fbchat = pickle.load(fp)
+	if sent:
+	    self.social.setText("You are talk with "+unicode(self.chof, "utf-8")+"\nYou sent "+sentword+" to him/her.\n\n"+fbchat)
+	#if self.tbcounter>20:
+	#    print "in"
+	#    self.tbcounter=0
+	#    last_message = self.client.getThreadInfo(self.chofid.uid)
+	#    last_message.reverse()
+	#self.tbcounter+=1
+	#for message in last_message:
+	    #if message.author.split(':')[1]==self.chofid.uid:
+	        #print "OK"
+		#msbuffer = msbuffer + "who : " + message.body + "\n" 
+	        #msbuffer.append(self.chof+": "+message.body+"\n")
 	return
 
     def nextFrameSlot(self):
@@ -227,6 +259,10 @@ class QtCapture(QtGui.QWidget):
         detpix = QtGui.QPixmap.fromImage(detimg)
         self.video_frame.setPixmap(pix)
         self.detect_frame.setPixmap(detpix)
+	if self.fbstate==2:
+	    with open("fbchat.p", "rb") as fp:
+                fbchat = pickle.load(fp)
+	    self.social.setText("You are talk with "+unicode(self.chof, "utf-8")+"\n\n\n\n"+fbchat)
 	if (righthand[0]!=0 or lefthand[0]!=0) and self.nonnum<10:
 	    if right_ans!=-1:
 	        self.word.setText("Detect Sign Pose: "+str(self.labelname[int(right_ans[0])]))
@@ -240,9 +276,9 @@ class QtCapture(QtGui.QWidget):
 	    self.nonnum = 0
 	    if self.seq!=[]:
 	        self.seq = map(int, self.seq)
+	        if self.fbstate==2:
+	            self.talkingbuffer(self.seq)
 	        self.seq=[]
-	if self.fbstate==2:
-	    self.talkingbuffer(self.seq)
 	    ###here to send message###
 	#self.bu.setText("You said:\na")
 	#####old vision#####
