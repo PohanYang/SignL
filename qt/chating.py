@@ -4,8 +4,9 @@ import sys
 
 def fb_buffer(client):
 	while(1):
-		chofid = client.getUsers("Pohan Yang")
-		chofid = chofid[0]
+		friends = client.getAllUsers()
+		chofid = friends[1]
+		#chofid = chofid[0]
 		fbm = ''
 		last_messages = client.getThreadInfo(chofid.uid, last_n=7)
 		last_messages.reverse()

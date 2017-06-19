@@ -102,11 +102,11 @@ class QtCapture(QtGui.QWidget):
 	laysoc.setAlignment(QtCore.Qt.AlignTop)
 
         self.video_frame = QtGui.QLabel()
-        self.detect_frame = QtGui.QLabel()
+        #self.detect_frame = QtGui.QLabel()
         lay0 = QtGui.QHBoxLayout()
         lay0.setMargin(10)
         lay0.addWidget(self.video_frame)
-        lay0.addWidget(self.detect_frame)
+        #lay0.addWidget(self.detect_frame)
 	lay0.addLayout(laysoc)
 
 	self.word = QLabel()
@@ -168,7 +168,7 @@ class QtCapture(QtGui.QWidget):
 	if self.detect_postion[2][0]==0 and self.detect_postion[2][1]==0 and self.detect_postion[2][2]==0 and self.detect_postion[1][0]==0 and self.detect_postion[1][1]==0 and self.detect_postion[1][2]==0:
 	    return righthand, lefthand
 	elif self.detect_postion[2][0]==0 and self.detect_postion[2][1]==0 and self.detect_postion[2][2]==0 and self.detect_postion[1][0]!=0 and self.detect_postion[1][1]!=0 and self.detect_postion[1][2]!=0:
-            righthand = self.detect_postion[1]
+	    righthand = self.detect_postion[1]
             return righthand, lefthand
 	else:
 	    righthand = self.detect_postion[2]
@@ -236,11 +236,9 @@ class QtCapture(QtGui.QWidget):
             hsv[int(y*0.7):int(y+1.3*h),int(x*0.7):int(x+1.3*w),:]=0
 	self.detect_postion = self.detect_postion.astype(int)
 	righthand, lefthand = self.classify3(righthand, lefthand)
-        img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
-        pix = QtGui.QPixmap.fromImage(img)
-	hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
+	#hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
-	    cv2.circle(hp, (righthand[0]+(righthand[3]/2),righthand[1]+(righthand[2]/2)), 5, (0,0,255), -1)
+	    cv2.rectangle(frame,(int(righthand[0]), int(righthand[1])), (int(righthand[0])+int(righthand[2]),int(righthand[1])+int(righthand[3])), (0,0,255), 3)
 	    if self.counter>25:
 	        self.counter=0
 	        rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
@@ -254,11 +252,14 @@ class QtCapture(QtGui.QWidget):
                 right_ans = righttime_ans_tmp.most_common(1)[0]
 	    self.counter = self.counter+1
 	if lefthand[0]!=0:
-	    cv2.circle(hp, (lefthand[0]+(lefthand[3]/2),lefthand[1]+(lefthand[2]/2)), 5, (0,255,0), -1)
-        detimg = QtGui.QImage(hp, hp.shape[1], hp.shape[0], QtGui.QImage.Format_RGB888)
-        detpix = QtGui.QPixmap.fromImage(detimg)
+	    cv2.rectangle(frame,(int(lefthand[0]), int(lefthand[1])), (int(lefthand[0])+int(lefthand[2]),int(lefthand[1])+int(lefthand[3])), (0,0,255), 3)
+	    #cv2.rectangle(frame, (lefthand[0],lefthand[1]), (lefthand[2], lefthand[3]), (0,255,0), 3)
+        #detimg = QtGui.QImage(hp, hp.shape[1], hp.shape[0], QtGui.QImage.Format_RGB888)
+        #detpix = QtGui.QPixmap.fromImage(detimg)
+        img = QtGui.QImage(frame, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888)
+        pix = QtGui.QPixmap.fromImage(img)
         self.video_frame.setPixmap(pix)
-        self.detect_frame.setPixmap(detpix)
+        #self.detect_frame.setPixmap(detpix)
 	if self.fbstate==2:
 	    with open("fbchat.p", "rb") as fp:
                 fbchat = pickle.load(fp)
