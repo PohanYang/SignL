@@ -19,7 +19,7 @@ from PIL import ImageDraw
 class QtCapture(QtGui.QWidget):
     def loadtensorflow(self):
         self.sess = tf.Session()
-        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0626.meta')
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0630.meta')
         new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
         self.all_vars = tf.trainable_variables()
         summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)

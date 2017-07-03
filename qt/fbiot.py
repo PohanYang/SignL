@@ -11,7 +11,9 @@ import tensorflow as tf
 import math
 import pickle
 import fbchat
+import codecs
 import chating
+import operator
 from numpy import array
 from collections import Counter
 from pomegranate import *
@@ -22,7 +24,7 @@ from PIL import ImageDraw
 class QtCapture(QtGui.QWidget):
     def loadtensorflow(self):
         self.sess = tf.Session()
-        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0619.meta')
+        new_saver = tf.train.import_meta_graph('../Model/NIN-Model-0630.meta')
         new_saver.restore(self.sess, tf.train.latest_checkpoint('../Model/./'))
         self.all_vars = tf.trainable_variables()
         summary_writer = tf.summary.FileWriter('/tmp/rgbcnntest', self.sess.graph)
@@ -58,7 +60,7 @@ class QtCapture(QtGui.QWidget):
 	    fl[n] = str(fl[n])[6:end]
 	return ofl, fl
     def loadhmmmodel(self):
-	modellist = ['hello', 'ok', 'yes']
+	modellist = ['come1','hello', 'help', 'hold1', 'hru', 'hungry', 'no1', 'ok1', 'sorry1', 'soso', 'thx1', 'unders', 'wtime', 'yes']
 	hmmmodel=[]
 	for model in modellist:
 	    with open("hmm_data/model/"+model+".p", "rb") as fp:
@@ -87,6 +89,7 @@ class QtCapture(QtGui.QWidget):
 	self.tbcounter = 21
 	self.talkdelay = 0
 	self.hmmmodel = self.loadhmmmodel()
+	self.hmmpro = []
         self.cap = cv2.VideoCapture(0)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 1000)
 	self.cap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 600)
@@ -194,16 +197,50 @@ class QtCapture(QtGui.QWidget):
 	return
 	    
     def talkingbuffer(self, seq):
+	sentword = ""
+	self.hmmpro = []
+	modellist = ['come1','hello', 'help', 'hold1', 'hru', 'hungry', 'no1', 'ok1', 'sorry1', 'soso', 'thx1', 'unders', 'wtime', 'yes']
 	if self.talkdelay <1:
 	    self.talkdelay+=1
 	    return
-	if self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)) and self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
-	     sentword = "Hello"
-	if self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
-	     sentword = "OK"
-	if self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)):
-	     sentword = "Yes"
-	sent = self.client.send(self.chofid.uid, str(sentword))
+	for hmmiter in range(len(self.hmmmodel)):
+	    self.hmmpro.append(self.hmmmodel[hmmiter].log_probability(map(str, seq)))
+	hmmindex, hmmvalue = max(enumerate(self.hmmpro), key=operator.itemgetter(1))
+	if hmmindex==0:
+	    sentword = "Come!"
+	if hmmindex==1:
+	    sentword = "Hello!"
+	if hmmindex==2:
+	    sentword = "Help me."
+	if hmmindex==3:
+	    sentword = "Hold on."
+	if hmmindex==4:
+	    sentword = "How are you?"
+	if hmmindex==5:
+	    sentword = "I'm hungry."
+	if hmmindex==6:
+	    sentword = "No."
+	if hmmindex==7:
+	    sentword = "OK."
+	if hmmindex==8:
+	    sentword = "Sorry."
+	if hmmindex==9:
+	    sentword = "So so."
+	if hmmindex==10:
+	    sentword = "Thank you."
+	if hmmindex==11:
+	    sentword = "I understand."
+	if hmmindex==12:
+	    sentword = "What time is it?."
+	if hmmindex==13:
+	    sentword = "Yes."
+	#if self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)) and self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
+	#     sentword = "Hello"
+	#if self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[1].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
+	#     sentword = "OK"
+	#if self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[0].log_probability(map(str, seq)) and self.hmmmodel[2].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)):
+	#     sentword = "Yes"
+	sent = self.client.send(self.chofid.uid, unicode(sentword, "utf-8"))
 	with open("fbchat.p", "rb") as fp:
             fbchat = pickle.load(fp)
 	if sent:
