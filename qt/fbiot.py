@@ -73,7 +73,7 @@ class QtCapture(QtGui.QWidget):
 	self.loadtensorflow()
 	self.loadanswer()
         self.fps = 24
-	self.counter = 25
+	self.counter = 20
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
 	#self.pout = [0, 0, 0]
@@ -276,7 +276,7 @@ class QtCapture(QtGui.QWidget):
 	#hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
 	    cv2.rectangle(frame,(int(righthand[0]), int(righthand[1])), (int(righthand[0])+int(righthand[2]),int(righthand[1])+int(righthand[3])), (0,0,255), 3)
-	    if self.counter>25:
+	    if self.counter>20:
 	        self.counter=0
 	        rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
 	        rightflat_arr = self.get_pic(rightframe)
