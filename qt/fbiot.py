@@ -60,7 +60,7 @@ class QtCapture(QtGui.QWidget):
 	    fl[n] = str(fl[n])[6:end]
 	return ofl, fl
     def loadhmmmodel(self):
-	modellist = ['come1','hello', 'help', 'hold1', 'hru', 'hungry', 'no1', 'ok1', 'sorry1', 'soso', 'thx1', 'unders', 'wtime', 'yes']
+	modellist = ['come','hello', 'help', 'hold', 'hru', 'hungry', 'no', 'ok', 'sorry', 'soso', 'thx', 'unders', 'wtime', 'yes']
 	hmmmodel=[]
 	for model in modellist:
 	    with open("hmm_data/model/"+model+".p", "rb") as fp:
@@ -73,7 +73,7 @@ class QtCapture(QtGui.QWidget):
 	self.loadtensorflow()
 	self.loadanswer()
         self.fps = 24
-	self.counter = 20
+	self.counter = 15
 	self.righttime_ans = np.zeros(10)
 	self.detect_postion = np.zeros((3,4))
 	#self.pout = [0, 0, 0]
@@ -231,7 +231,7 @@ class QtCapture(QtGui.QWidget):
 	if hmmindex==11:
 	    sentword = "I understand."
 	if hmmindex==12:
-	    sentword = "What time is it?."
+	    sentword = "What time is it?"
 	if hmmindex==13:
 	    sentword = "Yes."
 	#if self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[1].log_probability(map(str, seq)) and self.hmmmodel[0].log_probability(map(str, seq))>self.hmmmodel[2].log_probability(map(str, seq)):
@@ -270,13 +270,14 @@ class QtCapture(QtGui.QWidget):
 	for detect in range(3):
 	    x,y,w,h = self.DetectObject(hsv)
 	    self.detect_postion[detect]=[x,y,w,h]
-            hsv[int(y*0.7):int(y+1.3*h),int(x*0.7):int(x+1.3*w),:]=0
+            hsv[int(y):int(y+h),int(x):int(x+w),:]=0
+            #hsv[int(y*0.7):int(y+1.3*h),int(x*0.7):int(x+1.3*w),:]=0
 	self.detect_postion = self.detect_postion.astype(int)
 	righthand, lefthand = self.classify3(righthand, lefthand)
 	#hp = np.zeros((hsv.shape[0], hsv.shape[1], 3), np.uint8)
 	if righthand[0]!=0:
 	    cv2.rectangle(frame,(int(righthand[0]), int(righthand[1])), (int(righthand[0])+int(righthand[2]),int(righthand[1])+int(righthand[3])), (0,0,255), 3)
-	    if self.counter>20:
+	    if self.counter>15:
 	        self.counter=0
 	        rightframe = rightframe[righthand[1]:righthand[1]+righthand[3], righthand[0]:righthand[0]+righthand[2]]
 	        rightflat_arr = self.get_pic(rightframe)
