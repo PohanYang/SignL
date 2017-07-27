@@ -1,3 +1,3 @@
-VMe: Come!\u000aMe: Sorry.\u000aMe: Come!\u000aMe: Help me.\u000aMe: I'm hungry.\u000aMe: I understand.\u000aMe: I understand.\u000a
+VMe: Help me.\u000aMe: Help me.\u000aMe: So so.\u000aMe: OK.\u000aMe: Hello!\u000aMe: Thank you.\u000aMe: Thank you.\u000a
 p0
 .
